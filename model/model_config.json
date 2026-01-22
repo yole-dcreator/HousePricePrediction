@@ -1,0 +1,16 @@
+{
+    "selected_features": [
+        "OverallQual",
+        "GrLivArea",
+        "TotalBsmtSF",
+        "GarageCars",
+        "YearBuilt",
+        "Neighborhood"
+    ],
+    "model_algorithm": "Random Forest Regressor",
+    "model_metrics": {
+        "test_r2": 0.886089847110292,
+        "test_rmse": 29558.890895543074,
+        "test_mae": 18688.95039505491
+    }
+}

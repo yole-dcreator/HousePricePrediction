@@ -58,9 +58,6 @@ htmlcov/
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
-# Dataset (keep it optional)
-# model/house_prices_train.csv
-
-
-model/model_config.json
-
+git add model/model_config.json
+git commit -m "Add model_config.json for deployment"
+git push
