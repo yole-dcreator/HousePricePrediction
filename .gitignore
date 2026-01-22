@@ -60,7 +60,7 @@ htmlcov/
 
 # Dataset (keep it optional)
 # model/house_prices_train.csv
-model/house_prices_train.csv
-model/label_encoders.pkl
+
+
 model/model_config.json
-model/scaler.pkl
+
