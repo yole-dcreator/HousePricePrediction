@@ -1,8 +1,9 @@
-Flask==2.3.2
-numpy==1.24.3
-pandas==2.0.2
-scikit-learn==1.2.2
-joblib==1.2.0
-matplotlib==3.7.1
-seaborn==0.12.2
-Werkzeug==2.3.6
+Flask
+numpy
+pandas
+scikit-learn
+joblib
+matplotlib
+seaborn
+Werkzeug
+gunicorn
