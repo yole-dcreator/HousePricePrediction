@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Price Prediction System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏠 House Price Prediction System</h1>
+            <p class="subtitle">Predict house prices using machine learning</p>
+        </header>
+
+        <div class="content">
+            <div class="form-section">
+                <h2>Enter House Details</h2>
+                <form id="predictionForm">
+                    <div class="form-group">
+                        <label for="OverallQual">Overall Quality (1-10)</label>
+                        <input type="range" id="OverallQual" name="OverallQual" min="1" max="10" value="5" class="slider">
+                        <span id="qualValue">5</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="GrLivArea">Ground Living Area (sq ft)</label>
+                        <input type="number" id="GrLivArea" name="GrLivArea" value="1500" min="300" max="5000" step="50">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="TotalBsmtSF">Total Basement Area (sq ft)</label>
+                        <input type="number" id="TotalBsmtSF" name="TotalBsmtSF" value="1000" min="0" max="6000" step="50">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="GarageCars">Garage Cars (0-5)</label>
+                        <input type="number" id="GarageCars" name="GarageCars" value="2" min="0" max="5" step="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="YearBuilt">Year Built</label>
+                        <input type="number" id="YearBuilt" name="YearBuilt" value="2000" min="1800" max="2025" step="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Neighborhood">Neighborhood</label>
+                        <select id="Neighborhood" name="Neighborhood">
+                            {% for neighborhood in neighborhoods %}
+                            <option value="{{ neighborhood }}">{{ neighborhood }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-predict">Predict Price</button>
+                </form>
+            </div>
+
+            <div class="results-section">
+                <h2>Prediction Result</h2>
+                <div id="resultContainer" class="result-container hidden">
+                    <div class="result-box">
+                        <p class="result-label">Predicted House Price:</p>
+                        <p class="result-price" id="predictedPrice">$0.00</p>
+                    </div>
+
+                    <div class="details-box">
+                        <h3>Input Features Used:</h3>
+                        <div id="detailsContent" class="details-content"></div>
+                    </div>
+
+                    <div class="info-box">
+                        <p><strong>Model:</strong> Random Forest Regressor</p>
+                        <p><strong>Test R² Score:</strong> 0.8861</p>
+                        <p><strong>Test RMSE:</strong> $29,558.89</p>
+                    </div>
+                </div>
+
+                <div id="loadingSpinner" class="loading-spinner hidden">
+                    <div class="spinner"></div>
+                    <p>Calculating prediction...</p>
+                </div>
+
+                <div id="errorMessage" class="error-message hidden"></div>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 House Price Prediction System | Built with Flask & Machine Learning</p>
+        </footer>
+    </div>
+
+    <script>
+        // Update quality value display
+        const qualitySlider = document.getElementById('OverallQual');
+        const qualValue = document.getElementById('qualValue');
+        qualitySlider.addEventListener('input', function() {
+            qualValue.textContent = this.value;
+        });
+
+        // Form submission
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const resultContainer = document.getElementById('resultContainer');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Clear previous messages
+            resultContainer.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            errorMessage.textContent = '';
+            
+            // Show loading spinner
+            loadingSpinner.classList.remove('hidden');
+
+            try {
+                // Prepare form data
+                const formData = {
+                    OverallQual: document.getElementById('OverallQual').value,
+                    GrLivArea: document.getElementById('GrLivArea').value,
+                    TotalBsmtSF: document.getElementById('TotalBsmtSF').value,
+                    GarageCars: document.getElementById('GarageCars').value,
+                    YearBuilt: document.getElementById('YearBuilt').value,
+                    Neighborhood: document.getElementById('Neighborhood').value
+                };
+
+                // Send prediction request
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Display prediction result
+                    document.getElementById('predictedPrice').textContent = 
+                        '$' + new Intl.NumberFormat('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }).format(data.predicted_price);
+
+                    // Display input features
+                    const detailsContent = document.getElementById('detailsContent');
+                    let featureHTML = '<ul>';
+                    for (const [key, value] of Object.entries(data.features)) {
+                        if (key === 'GrLivArea' || key === 'TotalBsmtSF') {
+                            featureHTML += `<li><strong>${key}:</strong> ${value} sq ft</li>`;
+                        } else if (key === 'OverallQual' || key === 'GarageCars') {
+                            featureHTML += `<li><strong>${key}:</strong> ${value}</li>`;
+                        } else if (key === 'YearBuilt') {
+                            featureHTML += `<li><strong>${key}:</strong> ${value}</li>`;
+                        } else {
+                            featureHTML += `<li><strong>${key}:</strong> ${value}</li>`;
+                        }
+                    }
+                    featureHTML += '</ul>';
+                    detailsContent.innerHTML = featureHTML;
+
+                    // Show result
+                    loadingSpinner.classList.add('hidden');
+                    resultContainer.classList.remove('hidden');
+                } else {
+                    throw new Error(data.error || 'Prediction failed');
+                }
+            } catch (error) {
+                loadingSpinner.classList.add('hidden');
+                errorMessage.textContent = 'Error: ' + error.message;
+                errorMessage.classList.remove('hidden');
+            }
+        });
+
+        // Validate input ranges in real-time
+        document.getElementById('OverallQual').addEventListener('change', function() {
+            this.value = Math.max(1, Math.min(10, this.value));
+        });
+
+        document.getElementById('GrLivArea').addEventListener('change', function() {
+            this.value = Math.max(300, this.value || 300);
+        });
+
+        document.getElementById('TotalBsmtSF').addEventListener('change', function() {
+            this.value = Math.max(0, this.value || 0);
+        });
+
+        document.getElementById('GarageCars').addEventListener('change', function() {
+            this.value = Math.max(0, Math.min(5, this.value || 0));
+        });
+
+        document.getElementById('YearBuilt').addEventListener('change', function() {
+            this.value = Math.max(1800, Math.min(2025, this.value || 2000));
+        });
+    </script>
+</body>
+</html>
